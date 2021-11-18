@@ -1,0 +1,39 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block content %}
+<!-- Begin Page Content -->
+    <div class="container-fluid vh-100 ">
+
+        <!-- Page Heading -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Classify</h1>
+            
+        </div>
+
+        <!-- Content Row -->
+        <div class="row text-center">
+            <form class="w-50 mx-4" action="{% url 'result' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="text" class="form-control form-control-user w-100" id="classifyText" name="classifyText" placeholder="Enter Text">
+                </div>
+                <button type="submit" class="btn btn-primary py-2 px-4 text-center">submit</button>
+            </form>
+
+            
+        </div>
+        <div class="row text-center mx-4 p-4">
+            {% if text %}
+                <h6>Sentiment: {{ text }} </h6>
+            {% else %}
+                <h6>Nothing to show here</h6>
+            {% endif %}
+        </div>
+
+        
+
+    <!-- /.container-fluid -->
+    </div>
+<!-- End of Main Content -->
+
+{% endblock content %}
