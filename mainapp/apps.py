@@ -15,4 +15,4 @@ class MainappConfig(AppConfig):
         data = pickle.load(pickled)
     model = data['model']
     vectorizer = data['vectorizer']
-
+ 
