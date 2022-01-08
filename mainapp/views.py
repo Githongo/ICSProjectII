@@ -2,6 +2,7 @@ from django.shortcuts import render
 
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect
+from tensorflow.keras.preprocessing import text
 
 from mainapp.apps import MainappConfig
 from django.contrib.auth.models import User
@@ -9,8 +10,18 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
+from sentimentanalyser.settings import BASE_DIR
 
 import tweepy
+import os
+import re
+
+import numpy as np
+import pandas as pd
+from tensorflow import keras 
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+ 
 
 
 def index(request):
@@ -40,11 +51,42 @@ def analyse(request):
         topics = topics.replace(" ", "")
         topics = topics.replace(",", " OR ")
 
-        tweets = fetchTweets('a')
+        tweets = fetchTweets(topics)
 
+        tweets_list = []
+        for tweet in tweets:
+            tweets_list.append([tweet[3]])
+
+        #sample_tweets = [['Apple music is good #the best'], ['Iphone 13 is bad @terrible UI'], ['The weather before and after'], ['Week good at iphone https://www.geeksforgeeks.org/different-ways-to-create-pandas-dataframe/'], ['Good']]
+        #tweets_df = pd.DataFrame(sample_tweets, columns = ['text'])
+
+        tweets_df = pd.DataFrame(tweets_list, columns=['text'])
+
+        path = os.path.join(BASE_DIR, 'mainapp/models/sentModel.h5')
+        reconstructed_model = keras.models.load_model(path)
+
+        preprocessed = preprocessor(tweets_df)
+        prediction = reconstructed_model.predict(preprocessed)
+
+        classes_x=np.argmax(prediction,axis=1)
+
+        classes = [""]*len(classes_x)
+        for i, sent in enumerate(classes_x):
+            if(sent == 0):
+                classes[i] = "Negative"
+            elif(sent == 1):
+                classes[i] = "Neutral"
+            elif(sent == 2):
+                classes[i] = "Positive" 
+
+
+        for index, tweet in enumerate(tweets):
+            tweet.insert(4, classes[index])
+
+        classified_tweets = tweets
         context = {
             "title": "Analysed Tweets",
-            "content": tweets,
+            "classified_tweets": classified_tweets,
         }
         return render(request, 'pages/analyse.html', context)
 
@@ -58,11 +100,8 @@ def classify(request):
 @login_required
 def result(request):
     text = request.GET['classifyText']
-    #vectorized text
-    vector = MainappConfig.vectorizer.transform([text])
-    prediction = MainappConfig.model.predict(vector)[0]
     context = {
-        "text": prediction,
+        "text": 'prediction',
     }
     return render(request, 'pages/classify.html', context)
 
@@ -112,8 +151,26 @@ def fetchTweets(topics):
     )
     api = tweepy.API(auth)
     
-    corona_tweets = tweepy.Cursor(api.search_tweets, q="iPhone OR iOS OR Apple -filter:retweets",lang = "en", show_user = True,tweet_mode="extended").items(50)
+    corona_tweets = tweepy.Cursor(api.search_tweets, q=topics+"-filter:retweets",lang = "en", show_user = True,tweet_mode="extended").items(50)
     corona_tweets_list = [[tweet.created_at, tweet.place, tweet.user.name, tweet.full_text] for tweet in corona_tweets]
-    
 
-    return corona_tweets_list[0] #Tweet text at [3]
+    return corona_tweets_list #Tweet text at [0][3]
+
+
+def preprocessor(tweets_df):
+    #remove chars
+    pattern = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+|#[a-zA-Z]+|$[a-zA-Z]+|@[a-zA-Z]+|[,.^_$*%-;鶯!?:]')
+    for i in range(len(tweets_df["text"])):
+        tweets_df["text"][i] = pattern.sub('', tweets_df["text"][i])
+
+    # Text tokenization
+    tokenizer = Tokenizer(num_words=500, lower=True, split=' ')
+    tokenizer.fit_on_texts(tweets_df['text'])
+
+    # Transforms text to a sequence of integers
+    X = tokenizer.texts_to_sequences(tweets_df['text'])
+    # Pad sequences to the same length
+    X = pad_sequences(X, padding='post', maxlen=20)
+
+    tweets_arr = X
+    return tweets_arr
