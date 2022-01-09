@@ -1,15 +1,13 @@
 from django.shortcuts import render
 
-from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect
 from tensorflow.keras.preprocessing import text
 
-from mainapp.apps import MainappConfig
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
+from mainapp.models import ClassifiedTopic, ClassifiedTweet
 from sentimentanalyser.settings import BASE_DIR
 
 import tweepy
@@ -25,11 +23,13 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 
 def index(request):
-    
-    context = {
-        "title" : "Login to Continue",
-    }
-    return render(request, 'account/login.html', context)
+    if request.user.is_authenticated:
+        return HttpResponseRedirect("/home")
+    else:
+        context = {
+            "title" : "Login to Continue",
+        }
+        return render(request, 'account/login.html', context)
 
 @login_required
 def home(request):
@@ -83,7 +83,23 @@ def analyse(request):
         for index, tweet in enumerate(tweets):
             tweet.insert(4, classes[index])
 
+            location = "Not Specified"
+            if (tweet[1] != None):
+                location = tweet[1]
+
+            classifiedTopic = ClassifiedTopic(
+                date=tweet[0],
+                location=location,
+                username=tweet[2],
+                tweet=tweet[3],
+                sentiment=tweet[4],
+            )
+            classifiedTopic.save()
+
+
         classified_tweets = tweets
+
+
         context = {
             "title": "Analysed Tweets",
             "classified_tweets": classified_tweets,
@@ -108,7 +124,7 @@ def classify(request):
 
         preprocessed = preprocessor(text_df)
         predicted = reconstructed_model.predict(preprocessed)
-        
+
         classified =np.argmax(predicted,axis=1)
         print(classified[0])
 
@@ -120,6 +136,13 @@ def classify(request):
         elif(classified[0] == 2):
             sentiment = "Positive"
 
+        classifiedTweet = ClassifiedTweet(
+            username = request.user,
+            tweet = text,
+            sentiment = sentiment,
+        )
+        classifiedTweet.save()
+
         context = {
             "text": sentiment,
         }
@@ -127,10 +150,13 @@ def classify(request):
 
 def login(request):
     if request.method == 'GET':
-        context = {
-            "title" : "Login",
-        }
-        return render(request, 'account/login.html', context)
+        if request.user.is_authenticated:
+            return HttpResponseRedirect("/home")
+        else:
+            context = {
+                "title" : "Login",
+            }
+            return render(request, 'account/login.html', context)
 
     elif request.method == 'POST':
         username = request.POST['username']

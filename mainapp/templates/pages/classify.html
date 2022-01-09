@@ -15,7 +15,7 @@
             <form class="w-75 mx-4" method="POST" action="{% url 'classify' %}">
                 {% csrf_token %}
                 <div class="form-group">
-                    <textarea type="text" rows="5" class="form-control form-control-user w-100" id="classifyText" name="classifyText" placeholder="Enter Text" ></textarea>
+                    <textarea type="text" rows="5" maxlength="500" class="form-control form-control-user w-100" id="classifyText" name="classifyText"  placeholder="Enter Text" >Should’ve been had this feature on the iPhone 2 https://t.co/qJjwB5Q0RH</textarea>
                 </div>
                 <button type="submit" class="btn btn-primary py-2 px-4 text-center">submit</button>
             </form>
