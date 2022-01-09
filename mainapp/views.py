@@ -92,18 +92,38 @@ def analyse(request):
 
 @login_required
 def classify(request):
-    context = {
-        "title": "Classify",
-    }
-    return render(request, 'pages/classify.html', context)
+    if request.method == 'GET':
+        context = {
+            "title": "Classify",
+        }
+        return render(request, 'pages/classify.html', context)
+    
+    elif request.method == 'POST':
+        text = request.POST['classifyText']
+        textList = [text]
+        text_df = pd.DataFrame(textList, columns=['text'])
 
-@login_required
-def result(request):
-    text = request.GET['classifyText']
-    context = {
-        "text": 'prediction',
-    }
-    return render(request, 'pages/classify.html', context)
+        path = os.path.join(BASE_DIR, 'mainapp/models/sentModel.h5')
+        reconstructed_model = keras.models.load_model(path)
+
+        preprocessed = preprocessor(text_df)
+        predicted = reconstructed_model.predict(preprocessed)
+        
+        classified =np.argmax(predicted,axis=1)
+        print(classified[0])
+
+        sentiment = "Not Analysed"
+        if(classified[0] == 0):
+            sentiment = "Negative"
+        elif(classified[0] == 1):
+            sentiment = "Neutral"
+        elif(classified[0] == 2):
+            sentiment = "Positive"
+
+        context = {
+            "text": sentiment,
+        }
+        return render(request, 'pages/classify.html', context)
 
 def login(request):
     if request.method == 'GET':

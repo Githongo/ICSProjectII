@@ -12,10 +12,10 @@
 
         <!-- Content Row -->
         <div class="row text-center">
-            <form class="w-50 mx-4" action="{% url 'result' %}">
+            <form class="w-75 mx-4" method="POST" action="{% url 'classify' %}">
                 {% csrf_token %}
                 <div class="form-group">
-                    <input type="text" class="form-control form-control-user w-100" id="classifyText" name="classifyText" placeholder="Enter Text">
+                    <textarea type="text" rows="5" class="form-control form-control-user w-100" id="classifyText" name="classifyText" placeholder="Enter Text" ></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary py-2 px-4 text-center">submit</button>
             </form>
