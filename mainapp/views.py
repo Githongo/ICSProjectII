@@ -33,8 +33,15 @@ def index(request):
 
 @login_required
 def home(request):
+    positive_tweets_count = ClassifiedTopic.objects.filter(sentiment="Positive").count()
+    neutral_tweets_count = ClassifiedTopic.objects.filter(sentiment="Neutral").count()
+    negative_tweets_count = ClassifiedTopic.objects.filter(sentiment="Negative").count()
+
     context = {
         "title" : "Dashboard",
+        "positive_tweets_count": positive_tweets_count,
+        "neutral_tweets_count": neutral_tweets_count,
+        "negative_tweets_count": negative_tweets_count,
     }
     return render(request, 'pages/home.html', context)
 
