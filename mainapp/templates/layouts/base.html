@@ -89,9 +89,15 @@
 
       <!-- Nav Item - Charts -->
       <li class="nav-item">
-        <a class="nav-link" href="{% url 'analyse' %}">
-          <i class="fas fa-fw fa-chart-area"></i>
-          <span>Analyse Topics</span></a>
+        <a class="nav-link" href="{% url 'analysed' %}">
+          <i class="fas fa-fw fa-boxes"></i>
+          <span>Analysed Topics</span></a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'classified' %}">
+          <i class="fas fa-fw fa-database"></i>
+          <span>Classified Tweets</span></a>
       </li>
 
 
@@ -220,7 +226,31 @@
 
     $(document).ready(function() {
         $('#analyseTable').DataTable();
-    } );
+
+        // Setup - add a text input to each footer cell
+        $('#analysedTable tfoot th').each( function () {
+            var title = $(this).text();
+            $(this).html( '<input type="text" class="form-control" placeholder="Search '+title+'" />' );
+        } );
+    
+        // DataTable
+        var table = $('#analysedTable').DataTable({
+            initComplete: function () {
+                // Apply the search
+                this.api().columns().every( function () {
+                    var that = this;
+    
+                    $( 'input', this.footer() ).on( 'keyup change clear', function () {
+                        if ( that.search() !== this.value ) {
+                            that
+                                .search( this.value )
+                                .draw();
+                        }
+                    } );
+                } );
+            }
+        });
+    });
 </script>
   
 

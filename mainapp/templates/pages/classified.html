@@ -1,0 +1,69 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block content %}
+<!-- Begin Page Content -->
+    <div class="container-fluid ">
+
+        <!-- Page Heading -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Analysed Tweets</h1>
+        </div>
+
+        <div class="row text-center mb-4">
+            {% if classified_tweets %}
+                <!-- <div><h6>Sentiment: {{ classified_tweets.0 }} </h6></div>  -->
+                
+                <div class="col-12">
+            
+                    
+                    <table id="analysedTable" class="display table table-striped table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Analysed By</th>
+                                <th>Tweet</th>
+                                <th>Sentiment</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for classified_tweet in classified_tweets %}
+                                <tr>
+                                    <td>{{ classified_tweet.date}}</td>
+                                    <td>{{ classified_tweet.username }}</td>
+                                    <td>{{ classified_tweet.tweet }}</td>
+                                    <td>{{ classified_tweet.sentiment }}</td>
+                                    <td><i class="far fa-trash-alt text-danger"></i></td>
+                                </tr>
+                            {% endfor %}
+                            
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Date</th>
+                                <th>Analysed by</th>
+                                <th>Tweet</th>
+                                <th>Sentiment</th>
+                                <th>Action</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+        
+                </div>
+
+            {% else %}
+                <h6>Nothing to show here</h6>
+            {% endif %}
+        </div>
+
+        
+        
+
+    <!-- /.container-fluid -->
+    </div>
+
+    
+<!-- End of Main Content -->
+
+{% endblock content %}

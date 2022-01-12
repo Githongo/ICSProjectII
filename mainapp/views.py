@@ -148,6 +148,28 @@ def classify(request):
         }
         return render(request, 'pages/classify.html', context)
 
+@login_required
+def analysed(request):
+    if request.method == 'GET':
+
+        analysed_tweets = ClassifiedTopic.objects.all()
+        context = {
+            "title": "Analysed Tweet topics",
+            "analysed_tweets": analysed_tweets, 
+        }
+        return render(request, 'pages/analysed.html', context)
+    
+@login_required
+def classified(request):
+    classified_tweets = ClassifiedTweet.objects.all()
+    if request.method == 'GET':
+        context = {
+            "title": "Classified Tweets",
+            "classified_tweets": classified_tweets,
+        }
+        return render(request, 'pages/classified.html', context)
+
+
 def login(request):
     if request.method == 'GET':
         if request.user.is_authenticated:
