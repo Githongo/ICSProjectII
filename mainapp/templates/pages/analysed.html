@@ -33,7 +33,7 @@
                                     <td>{{ analysed_tweet.username }}</td>
                                     <td>{{ analysed_tweet.tweet }}</td>
                                     <td>{{ analysed_tweet.sentiment }}</td>
-                                    <td><i class="far fa-trash-alt text-danger"></i></td>
+                                    <td><a href="{% url 'analysed.delete' analysed_tweet.id %}" ><i class="far fa-trash-alt text-danger"></i></a></td>
                                 </tr>
                             {% endfor %}
                             

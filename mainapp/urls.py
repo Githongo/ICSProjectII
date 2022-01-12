@@ -9,7 +9,9 @@ urlpatterns = [
     path('analyse/', views.analyse, name='analyse'),
     path('classify/', views.classify, name='classify'),
     path('analysed/', views.analysed, name='analysed'),
-    path('classifed/', views.classified, name='classified'),
+    path('analysed/delete/(?P<id>\d+)/$', views.delete_analysed, name='analysed.delete'),
+    path('classified/', views.classified, name='classified'),
+    path('classified/delete/(?P<id>\d+)/$', views.delete_classified, name='classified.delete'),
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
 

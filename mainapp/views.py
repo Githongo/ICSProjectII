@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from django.http.response import HttpResponseRedirect
 from tensorflow.keras.preprocessing import text
@@ -86,7 +86,6 @@ def analyse(request):
             elif(sent == 2):
                 classes[i] = "Positive" 
 
-
         for index, tweet in enumerate(tweets):
             tweet.insert(4, classes[index])
 
@@ -103,15 +102,23 @@ def analyse(request):
             )
             classifiedTopic.save()
 
-
         classified_tweets = tweets
-
 
         context = {
             "title": "Analysed Tweets",
             "classified_tweets": classified_tweets,
         }
         return render(request, 'pages/analyse.html', context)
+
+@login_required
+def delete_analysed(request, id):
+    ClassifiedTopic.objects.get(id=id).delete()
+    return redirect('/analysed')
+
+@login_required
+def delete_classified(request, id):
+    ClassifiedTweet.objects.get(id=id).delete()
+    return redirect('/classified')
 
 @login_required
 def classify(request):
