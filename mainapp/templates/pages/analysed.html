@@ -10,12 +10,9 @@
         </div>
 
         <div class="row text-center mb-4">
-            {% if analysed_tweets %}
-                <!-- <div><h6>Sentiment: {{ classified_tweets.0 }} </h6></div>  -->
-                
+            {% if analysed_tweets %}   
                 <div class="col-12">
             
-                    
                     <table id="analysedTable" class="display table table-striped table-bordered" style="width:100%">
                         <thead>
                             <tr>
@@ -48,8 +45,7 @@
                             </tr>
                         </tfoot>
                     </table>
-
-        
+                    
                 </div>
 
             {% else %}
@@ -57,13 +53,7 @@
             {% endif %}
         </div>
 
-        
-        
-
-    <!-- /.container-fluid -->
     </div>
-
-    
 <!-- End of Main Content -->
 
 {% endblock content %}

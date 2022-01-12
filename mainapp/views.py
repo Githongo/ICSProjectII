@@ -1,7 +1,6 @@
 from django.shortcuts import redirect, render
 
 from django.http.response import HttpResponseRedirect
-from tensorflow.keras.preprocessing import text
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate
@@ -54,29 +53,33 @@ def analyse(request):
         }
         return render(request, 'pages/analyse.html', context)
     elif request.method == 'POST':
+        #getting topics from request
         topics = request.POST['topics']
         topics = topics.replace(" ", "")
         topics = topics.replace(",", " OR ")
 
+        #fetching 50 tweets associated with the topics
         tweets = fetchTweets(topics)
 
+        #making a list then a dataframe of the text from the fetched tweets
         tweets_list = []
         for tweet in tweets:
             tweets_list.append([tweet[3]])
 
-        #sample_tweets = [['Apple music is good #the best'], ['Iphone 13 is bad @terrible UI'], ['The weather before and after'], ['Week good at iphone https://www.geeksforgeeks.org/different-ways-to-create-pandas-dataframe/'], ['Good']]
-        #tweets_df = pd.DataFrame(sample_tweets, columns = ['text'])
-
         tweets_df = pd.DataFrame(tweets_list, columns=['text'])
 
+        #loading saved model
         path = os.path.join(BASE_DIR, 'mainapp/models/sentModel.h5')
         reconstructed_model = keras.models.load_model(path)
 
+        #doing some data preprocessing
         preprocessed = preprocessor(tweets_df)
+        #model prediction
         prediction = reconstructed_model.predict(preprocessed)
-
+        #getting classes from the predictions
         classes_x=np.argmax(prediction,axis=1)
 
+        #Attaching corresponding sentiment strings to the classified classes
         classes = [""]*len(classes_x)
         for i, sent in enumerate(classes_x):
             if(sent == 0):
@@ -86,13 +89,14 @@ def analyse(request):
             elif(sent == 2):
                 classes[i] = "Positive" 
 
+        #Inserting the obtained sentiments to the initial fetched tweets
         for index, tweet in enumerate(tweets):
             tweet.insert(4, classes[index])
-
+            #replacing null location values with 'not specified'
             location = "Not Specified"
             if (tweet[1] != None):
                 location = tweet[1]
-
+            #saving classified tweet to DB
             classifiedTopic = ClassifiedTopic(
                 date=tweet[0],
                 location=location,
@@ -109,6 +113,7 @@ def analyse(request):
             "classified_tweets": classified_tweets,
         }
         return render(request, 'pages/analyse.html', context)
+
 
 @login_required
 def delete_analysed(request, id):
@@ -133,15 +138,17 @@ def classify(request):
         textList = [text]
         text_df = pd.DataFrame(textList, columns=['text'])
 
+        #loading model
         path = os.path.join(BASE_DIR, 'mainapp/models/sentModel.h5')
         reconstructed_model = keras.models.load_model(path)
-
+        #Text preprocessing and sentiment prediction
         preprocessed = preprocessor(text_df)
         predicted = reconstructed_model.predict(preprocessed)
-
+        #obtaining sentiment class
         classified =np.argmax(predicted,axis=1)
         print(classified[0])
 
+        #Attaching corresponding sentiment string to class value
         sentiment = "Not Analysed"
         if(classified[0] == 0):
             sentiment = "Negative"
@@ -150,6 +157,7 @@ def classify(request):
         elif(classified[0] == 2):
             sentiment = "Positive"
 
+        #Saving classified tweet to DB
         classifiedTweet = ClassifiedTweet(
             username = request.user,
             tweet = text,
@@ -236,11 +244,11 @@ def fetchTweets(topics):
     corona_tweets = tweepy.Cursor(api.search_tweets, q=topics+"-filter:retweets",lang = "en", show_user = True,tweet_mode="extended").items(50)
     corona_tweets_list = [[tweet.created_at, tweet.place, tweet.user.name, tweet.full_text] for tweet in corona_tweets]
 
-    return corona_tweets_list #Tweet text at [0][3]
+    return corona_tweets_list
 
 
 def preprocessor(tweets_df):
-    #remove chars
+    #remove unwated chars, links, etc.
     pattern = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+|#[a-zA-Z]+|$[a-zA-Z]+|@[a-zA-Z]+|[,.^_$*%-;鶯!?:]')
     for i in range(len(tweets_df["text"])):
         tweets_df["text"][i] = pattern.sub('', tweets_df["text"][i])
